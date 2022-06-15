@@ -26,9 +26,10 @@ int main(int argc, char const *argv[])
     }
 
     // Create buffers
-    int bufsize = 10;
+    int bufsize = 128;
     int buf[bufsize];
 
+    // Initialize buffers using openACC for loop operations
     nvtxRangePushA("Initialize buffers");
     if (rank == 1) {
         #pragma acc parallel loop
@@ -50,7 +51,7 @@ int main(int argc, char const *argv[])
     MPI_Win_fence(0, win);
     nvtxRangePop();
 
-    // Rank 0 receives the data from rank 1
+    // All ranks receive the data from rank 1
     if (rank != 1) {
         nvtxRangePushA("Receive data");
         MPI_Get(&buf, bufsize, MPI_INT, 1, 0, bufsize, MPI_INT, win);
@@ -58,7 +59,7 @@ int main(int argc, char const *argv[])
     }
     MPI_Win_fence(0, win);
 
-    // All ranks add rankID to the data
+    // All ranks add rankID to the data using openACC for loop operations
     nvtxRangePushA("Add rankID");
     #pragma acc parallel loop
     for (int i = 0; i < bufsize; i++) {
